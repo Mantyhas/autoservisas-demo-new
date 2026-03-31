@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -15,30 +16,50 @@ export function InquiryForm() {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Simple validation
+
     if (!formData.name || !formData.phone) {
       toast.error("Prašome užpildyti vardą ir telefono numerį");
       return;
     }
 
-    // In a real application, this would send data to a server
-    console.log("Form submitted:", formData);
-    toast.success("Užklausa išsiųsta! Susisieksime per 1-2 valandas.");
-    
-    // Reset form
-    setFormData({
-      name: "",
-      phone: "",
-      email: "",
-      carModel: "",
-      message: "",
-    });
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("https://formspree.io/f/mreoqabo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast.success("Užklausa išsiųsta! Susisieksime per 1-2 valandas.");
+        setFormData({
+          name: "",
+          phone: "",
+          email: "",
+          carModel: "",
+          message: "",
+        });
+      } else {
+        toast.error("Nepavyko išsiųsti užklausos. Bandykite dar kartą.");
+      }
+    } catch (error) {
+      toast.error("Įvyko klaida siunčiant formą. Patikrinkite interneto ryšį.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -46,25 +67,40 @@ export function InquiryForm() {
   };
 
   return (
-    <section id="inquiry-form" className="py-12 md:py-20 bg-gradient-to-br from-[#1a1a1a] to-[#2d2d2d] text-white relative overflow-hidden">
-      {/* Background Pattern */}
+    <section
+      id="inquiry-form"
+      className="py-12 md:py-20 bg-gradient-to-br from-[#1a1a1a] to-[#2d2d2d] text-white relative overflow-hidden"
+    >
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px)' }} />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px)",
+          }}
+        />
       </div>
 
       <div className="w-full max-w-4xl mx-auto px-6 relative z-10">
         <div className="text-center mb-10 md:mb-12">
           <div className="inline-flex items-center gap-2 bg-[#b91c1c]/20 border border-[#b91c1c]/30 rounded-full px-3 py-1.5 mb-4">
             <CheckCircle2 className="h-3.5 w-3.5 text-[#b91c1c]" />
-            <span className="text-xs" style={{ fontWeight: 600 }}>Nemokama konsultacija ir kainų pasiūlymas</span>
+            <span className="text-xs" style={{ fontWeight: 600 }}>
+              Nemokama konsultacija ir kainų pasiūlymas
+            </span>
           </div>
-          
-          <h2 className="text-2xl md:text-3xl lg:text-4xl mb-3 leading-tight" style={{ fontWeight: 700 }}>
-            Gaukite kainų pasiūlymą<br />
+
+          <h2
+            className="text-2xl md:text-3xl lg:text-4xl mb-3 leading-tight"
+            style={{ fontWeight: 700 }}
+          >
+            Gaukite kainų pasiūlymą
+            <br />
             <span className="text-[#b91c1c]">per kelias valandas</span>
           </h2>
           <p className="text-sm md:text-base text-gray-300 max-w-xl mx-auto leading-relaxed">
-            Užpildykite formą ir mūsų specialistai susisieks su jumis telefonu. Aptarsime problemą ir pasiūlysime geriausią sprendimą.
+            Užpildykite formą ir mūsų specialistai susisieks su jumis telefonu.
+            Aptarsime problemą ir pasiūlysime geriausią sprendimą.
           </p>
         </div>
 
@@ -152,19 +188,22 @@ export function InquiryForm() {
             <Button
               type="submit"
               size="default"
-              className="w-full bg-[#b91c1c] hover:bg-[#991b1b] text-white h-11 shadow-lg hover:shadow-xl transition-all text-sm mt-5"
+              disabled={isSubmitting}
+              className="w-full bg-[#b91c1c] hover:bg-[#991b1b] text-white h-11 shadow-lg hover:shadow-xl transition-all text-sm mt-5 disabled:opacity-70"
               style={{ fontWeight: 700 }}
             >
-              Siųsti užklausą – gauti pasiūlymą
+              {isSubmitting
+                ? "Siunčiama..."
+                : "Siųsti užklausą – gauti pasiūlymą"}
             </Button>
 
             <p className="text-xs text-muted-foreground text-center pt-1 leading-relaxed">
-              Pateikę užklausą sutinkate, kad susisiektume su jumis telefonu arba el. paštu dėl paslaugų teikimo
+              Pateikę užklausą sutinkate, kad susisiektume su jumis telefonu
+              arba el. paštu dėl paslaugų teikimo
             </p>
           </form>
         </div>
 
-        {/* Trust indicators below form */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5 mt-6 md:mt-8">
           <div className="flex items-center gap-3 md:justify-center">
             <div className="p-2 bg-[#b91c1c] rounded-lg flex-shrink-0">
@@ -172,27 +211,35 @@ export function InquiryForm() {
             </div>
             <div className="text-left">
               <div className="text-xs text-gray-400 mb-0.5">Atsakymas</div>
-              <div className="text-sm" style={{ fontWeight: 700 }}>Per 1-2 valandas</div>
+              <div className="text-sm" style={{ fontWeight: 700 }}>
+                Per 1-2 valandas
+              </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 md:justify-center">
             <div className="p-2 bg-[#b91c1c] rounded-lg flex-shrink-0">
               <Phone className="h-4 w-4" />
             </div>
             <div className="text-left">
-              <div className="text-xs text-gray-400 mb-0.5">Arba skambinkite</div>
-              <div className="text-sm" style={{ fontWeight: 700 }}>+370 600 00 000</div>
+              <div className="text-xs text-gray-400 mb-0.5">
+                Arba skambinkite
+              </div>
+              <div className="text-sm" style={{ fontWeight: 700 }}>
+                +370 600 00 000
+              </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 md:justify-center">
             <div className="p-2 bg-[#b91c1c] rounded-lg flex-shrink-0">
               <CheckCircle2 className="h-4 w-4" />
             </div>
             <div className="text-left">
               <div className="text-xs text-gray-400 mb-0.5">Nemokama</div>
-              <div className="text-sm" style={{ fontWeight: 700 }}>Konsultacija</div>
+              <div className="text-sm" style={{ fontWeight: 700 }}>
+                Konsultacija
+              </div>
             </div>
           </div>
         </div>
